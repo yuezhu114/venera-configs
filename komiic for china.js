@@ -1,3 +1,9 @@
+// 封面图片走公共代理转发, 避免部分网络环境下直连 public.komiic.com 被重置连接
+function proxyCoverUrl(url) {
+    if (!url) return url
+    return `https://wsrv.nl/?url=${encodeURIComponent(url.replace(/^https?:\/\//, ''))}`
+}
+
 class Komiic extends ComicSource {
 
     // 此漫画源的名称
@@ -6,7 +12,7 @@ class Komiic extends ComicSource {
     // 唯一标识符
     key = "Komiic"
 
-    version = "1.0.5"
+    version = "1.0.7"
 
     minAppVersion = "1.0.0"
 
@@ -92,10 +98,7 @@ class Komiic extends ComicSource {
                 id: comic.id,
                 title: comic.title,
                 subTitle: author,
-                cover: comic.imageUrl,
-                tags: tags,
-                description: description,
-                updateTime: formatedTime
+                cover: proxyCoverUrl(comic.imageUrl),
             }
         }
 
@@ -287,7 +290,7 @@ class Komiic extends ComicSource {
                     id: comic.id,
                     title: comic.title,
                     subTitle: author,
-                    cover: comic.imageUrl,
+                    cover: proxyCoverUrl(comic.imageUrl),
                     tags: tags,
                     description: description
                 }
@@ -440,6 +443,20 @@ class Komiic extends ComicSource {
                 'referer': `https://komiic.cc/comic/${comicId}/chapter/${epId}/images/all`
             }
             // 图片接口现在需要携带登录凭证, 否则会返回 402
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`
+            }
+            return {
+                headers: headers
+            }
+        },
+        // 可选, 调整封面/缩略图加载的行为 (解决封面加载失败/连接被重置的问题)
+        onThumbnailLoad: (url) => {
+            let token = this.loadData('token')
+            let headers = {
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'referer': 'https://komiic.cc/'
+            }
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`
             }
