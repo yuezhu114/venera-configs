@@ -12,7 +12,7 @@ class Komiic extends ComicSource {
     // 唯一标识符
     key = "Komiic"
 
-    version = "1.0.7"
+    version = "1.0.8"
 
     minAppVersion = "1.0.0"
 
@@ -477,7 +477,7 @@ class Komiic extends ComicSource {
                         // string
                         userName: e.account.nickname,
                         // string
-                        avatar: e.account.profileImageUrl,
+                        avatar: e.account.profileImageUrl ? proxyCoverUrl(e.account.profileImageUrl) : null,
                         // string
                         content: e.message,
                         // string?
