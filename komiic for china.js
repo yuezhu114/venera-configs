@@ -1,6 +1,6 @@
 // 封面图片走公共代理转发, 避免部分网络环境下直连 public.komiic.com 被重置连接
 function proxyCoverUrl(url) {
-    if (!url) return url
+    if (!url) return ''
     return `https://wsrv.nl/?url=${encodeURIComponent(url.replace(/^https?:\/\//, ''))}`
 }
 
@@ -12,7 +12,7 @@ class Komiic extends ComicSource {
     // 唯一标识符
     key = "Komiic"
 
-    version = "1.0.8"
+    version = "1.1.0"
 
     minAppVersion = "1.0.0"
 
@@ -69,7 +69,7 @@ class Komiic extends ComicSource {
             }
             let tags = []
             comic.categories.forEach((c) => {
-                tags.push(c.name)
+                if (c.name) tags.push(c.name)
             })
 
             function getTimeDifference(date) {
@@ -92,13 +92,16 @@ class Komiic extends ComicSource {
 
             let updateTime = new Date(comic.dateUpdated)
             let description = getTimeDifference(updateTime)
-            let formatedTime = `${updateTime.getFullYear()}-${updateTime.getMonth() + 1}-${updateTime.getDate()}`
+            let formatedTime = `${updateTime.getFullYear()}-${String(updateTime.getMonth() + 1).padStart(2, '0')}-${String(updateTime.getDate()).padStart(2, '0')}`
 
             return {
                 id: comic.id,
                 title: comic.title,
                 subTitle: author,
                 cover: proxyCoverUrl(comic.imageUrl),
+                tags: tags,
+                description: description,
+                updateTime: formatedTime
             }
         }
 
@@ -262,7 +265,7 @@ class Komiic extends ComicSource {
                 }
                 let tags = []
                 comic.categories.forEach((c) => {
-                    tags.push(c.name)
+                    if (c.name) tags.push(c.name)
                 })
 
                 function getTimeDifference(date) {
@@ -417,8 +420,8 @@ class Komiic extends ComicSource {
                 cover: info.cover,
                 // map<string, string[]> 标签
                 tags: {
-                    "作者": [info.subTitle],
-                    "标签": info.tags
+                    "作者": [info.subTitle || ''],
+                    "标签": (info.tags || []).filter(t => !!t)
                 },
                 // map<string, string>?, key为章节id, value为章节名称
                 chapters: results[1],
@@ -477,7 +480,7 @@ class Komiic extends ComicSource {
                         // string
                         userName: e.account.nickname,
                         // string
-                        avatar: e.account.profileImageUrl ? proxyCoverUrl(e.account.profileImageUrl) : null,
+                        avatar: proxyCoverUrl(e.account.profileImageUrl),
                         // string
                         content: e.message,
                         // string?
